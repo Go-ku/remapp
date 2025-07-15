@@ -120,3 +120,16 @@
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  nav,
+  header,
+  footer,
+  .print\\:hidden {
+    display: none !important;
+  }
+
+  .print\\:bg-white {
+    background-color: white !important;
+  }
+}
