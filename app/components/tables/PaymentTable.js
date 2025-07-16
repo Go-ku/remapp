@@ -9,6 +9,7 @@ import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { DownloadReceiptButton } from "@/components/buttons/DownloadReceiptButton";
 import Link from "next/link";
 
 export function PaymentTable({ data }) {
@@ -64,6 +65,18 @@ export function PaymentTable({ data }) {
             </Button>
           </Link>
         ),
+      },
+      {
+        header: "Receipt",
+        cell: ({ row }) => {
+          const payment = row.original;
+
+          return payment.status === "successful" ? (
+            <DownloadReceiptButton invoice={payment.invoice} />
+          ) : (
+            <span className="text-muted-foreground text-xs">Pending</span>
+          );
+        },
       },
     ],
     []

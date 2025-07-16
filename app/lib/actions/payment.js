@@ -1,9 +1,60 @@
-import { connectDB } from "@/lib/mongoose/db";
-import Payment from "@/lib/mongoose/models/Payment";
+import { connectDB } from "@/lib/db";
+import Payment from "@/lib/models/Payment";
+import Invoice from "@/lib/models/Invoice";
 
 export async function createPayment(data) {
   await connectDB();
-  return await Payment.create(data);
+
+  const lease = await Lease.findById(data.lease).populate("tenant property");
+
+  if (!lease) throw new Error("Lease not found");
+
+  // 🎯 Try to find a matching unpaid invoice for this lease
+  const invoice = await Invoice.findOne({
+    lease: lease._id,
+    tenant: lease.tenant._id,
+    status: { $ne: "paid" },
+  });
+
+  if (invoice) {
+    const existingPayment = await Payment.findOne({ invoice: invoice._id });
+
+    if (existingPayment) {
+      throw new Error("A payment already exists for this invoice.");
+    }
+  }
+  // 🎟 Generate receipt/invoice numbers
+  const receiptNumber =
+    data.receiptNumber ||
+    `RCPT-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+  const invoiceNumber =
+    invoice?.invoiceNumber ||
+    `INV-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+
+  const payment = new Payment({
+    lease: lease._id,
+    tenant: lease.tenant._id,
+    property: lease.property._id,
+    invoice: invoice?._id || null,
+    amount: data.amount,
+    method: data.method,
+    type: data.type,
+    status: "successful",
+    paidAt: new Date(),
+    receiptNumber,
+    invoiceNumber,
+  });
+
+  await payment.save();
+
+  // ✅ If invoice found, mark as paid
+  if (invoice) {
+    invoice.status = "paid";
+    invoice.paidAt = new Date();
+    await invoice.save();
+  }
+
+  return payment;
 }
 
 export async function getPaymentsByTenant(tenantId) {
@@ -23,5 +74,7 @@ export async function getPaymentById(id) {
 
 export async function getAllPayments() {
   await connectDB();
-  return await Payment.find().populate("lease tenant").sort({ paidAt: -1 });
+  return await Payment.find()
+    .populate("lease tenant invoice")
+    .sort({ paidAt: -1 });
 }
