@@ -32,3 +32,30 @@ export async function getInvoicesByLandlordId(landlordId) {
     .populate("tenant lease")
     .then((invoices) => invoices.filter((inv) => inv.property !== null));
 }
+
+export function getInvoiceStatus(invoice) {
+  const now = new Date();
+  const isOverdue =
+    new Date(invoice.dueDate) < now && invoice.status !== "paid";
+
+  if (isOverdue) return "overdue";
+  return invoice.status;
+}
+
+export async function updatePaidAmount(invoiceId, newAmount) {
+  await connectDB();
+  const invoice = await Invoice.findById(invoiceId);
+
+  if (!invoice) throw new Error("Invoice not found");
+
+  invoice.paidAmount = Number(newAmount);
+
+  if (invoice.paidAmount >= invoice.amount) {
+    invoice.status = "paid";
+    invoice.paidAt = new Date();
+  } else {
+    invoice.status = "unpaid";
+  }
+
+  await invoice.save();
+}

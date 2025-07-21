@@ -15,7 +15,9 @@ export default async function InvoiceDetail({ params }) {
         {payments.length > 0 ? (
           payments.map((payment) => (
             <li key={payment._id} className="border p-3 rounded">
-              <p>Paid: ZMW {payment.amount}</p>
+              <p>Total Due: ZMW {invoice.amount}</p>
+              <p>Paid: ZMW {invoice.paidAmount || 0}</p>
+              <p>Balance: ZMW {invoice.amount - (invoice.paidAmount || 0)}</p>
               <p>Date: {new Date(payment.paidAt).toLocaleDateString()}</p>
               <p>Method: {payment.method}</p>
               <p>Receipt #: {payment.receiptNumber}</p>
@@ -25,6 +27,17 @@ export default async function InvoiceDetail({ params }) {
           <p className="text-sm text-muted-foreground">No payments recorded.</p>
         )}
       </ul>
+      {user?.role === "admin" && (
+        <form action={updatePaidAmount}>
+          <Input
+            name="paidAmount"
+            type="number"
+            defaultValue={invoice.paidAmount}
+          />
+          <input type="hidden" name="invoiceId" value={invoice._id} />
+          <Button type="submit">Update Paid Amount</Button>
+        </form>
+      )}
     </div>
   );
 }

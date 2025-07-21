@@ -49,8 +49,20 @@ export async function createPayment(data) {
 
   // ✅ If invoice found, mark as paid
   if (invoice) {
-    invoice.status = "paid";
-    invoice.paidAt = new Date();
+    const totalPaid = invoice.paidAmount || 0;
+    const newTotal = totalPaid + data.amount;
+
+    if (newTotal > invoice.amount) {
+      throw new Error("Payment exceeds invoice balance.");
+    }
+
+    invoice.paidAmount = newTotal;
+
+    if (newTotal >= invoice.amount) {
+      invoice.status = "paid";
+      invoice.paidAt = new Date();
+    }
+
     await invoice.save();
   }
 
