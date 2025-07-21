@@ -1,6 +1,38 @@
 import { connectDB } from "../";
-import Invoice from "../models/Invoice";
+import Lease from "@/lib/models/Lease";
+import Invoice from "@/lib/models/Invoice";
+import { createNotification } from "./notification";
+import {v4 as uuidv4} from "uuid"
 
+export async function createInvoice({ leaseId, amount, dueDate, type = "rent" }) {
+  await connectDB();
+
+  const lease = await Lease.findById(leaseId).populate("tenant property");
+  if (!lease) throw new Error("Lease not found");
+
+  const invoiceNumber = `INV-${uuidv4().slice(0, 8).toUpperCase()}`;
+
+  const invoice = await Invoice.create({
+    lease: lease._id,
+    tenant: lease.tenant._id,
+    property: lease.property._id,
+    amount,
+    dueDate,
+    type,
+    invoiceNumber,
+    status: "unpaid",
+  });
+
+  // 🔔 Send notification to tenant
+  await createNotification({
+    recipient: lease.tenant._id,
+    message: `New invoice #${invoiceNumber} is available for ${lease.property.name}`,
+    type: "invoice",
+    link: `/dashboard/invoices/${invoice._id}`,
+  });
+
+  return invoice;
+}
 export async function getAllInvoices() {
   await connectDB();
   return await Invoice.find({})
@@ -31,4 +63,14 @@ export async function getInvoicesByLandlordId(landlordId) {
     })
     .populate("tenant lease")
     .then((invoices) => invoices.filter((inv) => inv.property !== null));
+}
+
+export function getInvoiceStatus(invoice) {
+  const now = new Date();
+  const isPaid = invoice.status === "paid";
+  const isOverdue = new Date(invoice.dueDate) < now && !isPaid;
+
+  if (isPaid) return "paid";
+  if (isOverdue) return "overdue";
+  return "unpaid";
 }

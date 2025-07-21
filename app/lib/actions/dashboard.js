@@ -4,6 +4,44 @@ import Lease from "../models/Lease";
 import Tenant from "../models/Tenant";
 import Payment from "../models/Payment";
 
+export async function getAdminDashboardData() {
+  await connectDB();
+
+  const [totalProperties, totalTenants, totalLeases] = await Promise.all([
+    Property.countDocuments(),
+    Tenant.countDocuments(),
+    Lease.countDocuments({ terminated: false }),
+  ]);
+
+  // Monthly revenue
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const payments = await Payment.aggregate([
+    {
+      $match: {
+        paidAt: { $gte: startOfMonth },
+        status: "successful",
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        total: { $sum: "$amount" },
+      },
+    },
+  ]);
+
+  const monthlyRevenue = payments[0]?.total || 0;
+
+  return {
+    totalProperties,
+    totalTenants,
+    totalLeases,
+    monthlyRevenue,
+  };
+}
+
 export async function getAdminStats() {
   await connectDB();
 
@@ -24,7 +62,58 @@ export async function getAdminStats() {
     totalIncome: paymentSum[0]?.total || 0,
   };
 }
+export async function getLandlordDashboardData(landlordId) {
+  await connectDB();
 
+  const [properties, leases, tenants, payments] = await Promise.all([
+    Property.find({ owner: landlordId }).select("_id"),
+    Lease.find({ property: { $in: await Property.find({ owner: landlordId }).distinct("_id") }, terminated: false }),
+    Tenant.countDocuments({}), // Optional: or filter to only active tenants under leases above
+    Payment.aggregate([
+      {
+        $match: {
+          status: "successful",
+        },
+      },
+      {
+        $lookup: {
+          from: "leases",
+          localField: "lease",
+          foreignField: "_id",
+          as: "lease",
+        },
+      },
+      { $unwind: "$lease" },
+      {
+        $lookup: {
+          from: "properties",
+          localField: "lease.property",
+          foreignField: "_id",
+          as: "property",
+        },
+      },
+      { $unwind: "$property" },
+      {
+        $match: { "property.owner": landlordId },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$amount" },
+        },
+      },
+    ]),
+  ]);
+
+  const totalRevenue = payments[0]?.total || 0;
+
+  return {
+    totalProperties: properties.length,
+    totalLeases: leases.length,
+    totalTenants: tenants,
+    totalRevenue,
+  };
+}
 export async function getLandlordStats(landlordId) {
   await connectDB();
 
@@ -85,4 +174,14 @@ export async function getTenantStats(tenantId) {
     lease,
     payments,
   };
+}
+
+export async function getTenantData(tenantId) {
+  await connectDB();
+
+  const lease = await Lease.findOne({ tenant: tenantId }).populate("property");
+  const invoices = await Invoice.find({ tenant: tenantId }).sort({ dueDate: -1 });
+  const payments = await Payment.find({ tenant: tenantId }).sort({ paidAt: -1 });
+
+  return { lease, invoices, payments };
 }
