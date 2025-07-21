@@ -1,6 +1,43 @@
 import { connectDB } from "../";
-import Invoice from "../models/Invoice";
+import Lease from "@/lib/models/Lease";
+import Invoice from "@/lib/models/Invoice";
+import { createNotification } from "./notification";
+import { v4 as uuidv4 } from "uuid";
 
+export async function createInvoice({
+  leaseId,
+  amount,
+  dueDate,
+  type = "rent",
+}) {
+  await connectDB();
+
+  const lease = await Lease.findById(leaseId).populate("tenant property");
+  if (!lease) throw new Error("Lease not found");
+
+  const invoiceNumber = `INV-${uuidv4().slice(0, 8).toUpperCase()}`;
+
+  const invoice = await Invoice.create({
+    lease: lease._id,
+    tenant: lease.tenant._id,
+    property: lease.property._id,
+    amount,
+    dueDate,
+    type,
+    invoiceNumber,
+    status: "unpaid",
+  });
+
+  // 🔔 Send notification to tenant
+  await createNotification({
+    recipient: lease.tenant._id,
+    message: `New invoice #${invoiceNumber} is available for ${lease.property.name}`,
+    type: "invoice",
+    link: `/dashboard/invoices/${invoice._id}`,
+  });
+
+  return invoice;
+}
 export async function getAllInvoices() {
   await connectDB();
   return await Invoice.find({})
@@ -35,27 +72,10 @@ export async function getInvoicesByLandlordId(landlordId) {
 
 export function getInvoiceStatus(invoice) {
   const now = new Date();
-  const isOverdue =
-    new Date(invoice.dueDate) < now && invoice.status !== "paid";
+  const isPaid = invoice.status === "paid";
+  const isOverdue = new Date(invoice.dueDate) < now && !isPaid;
 
+  if (isPaid) return "paid";
   if (isOverdue) return "overdue";
-  return invoice.status;
-}
-
-export async function updatePaidAmount(invoiceId, newAmount) {
-  await connectDB();
-  const invoice = await Invoice.findById(invoiceId);
-
-  if (!invoice) throw new Error("Invoice not found");
-
-  invoice.paidAmount = Number(newAmount);
-
-  if (invoice.paidAmount >= invoice.amount) {
-    invoice.status = "paid";
-    invoice.paidAt = new Date();
-  } else {
-    invoice.status = "unpaid";
-  }
-
-  await invoice.save();
+  return "unpaid";
 }

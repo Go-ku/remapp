@@ -1,46 +1,23 @@
-import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/mongoose";
-import Lease from "@/lib/mongoose/models/Lease";
-import Invoice from "@/lib/mongoose/models/Invoice";
-import { v4 as uuidv4 } from "uuid";
+// cron/monthlyInvoiceJob.js
+import { connectDB } from "@/lib/db";
+import Lease from "@/models/Lease";
+import { createInvoice } from "@/lib/mongoose/actions/invoiceActions";
 
-export async function GET() {
+export async function runMonthlyInvoiceJob() {
   await connectDB();
 
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth(); // 0-indexed
-  const dueDate = new Date(year, month, 5); // e.g. due on 5th
+  const activeLeases = await Lease.find({ terminated: false }).populate("tenant property");
 
-  const leases = await Lease.find({ status: "active" }).populate("tenant property");
+  const now = new Date();
+  const dueDate = new Date(now.getFullYear(), now.getMonth(), 5); // Invoices due on the 5th of the month
 
-  const invoices = [];
-
-  for (const lease of leases) {
-    // Prevent duplicate invoice for same lease/month
-    const exists = await Invoice.findOne({
-      lease: lease._id,
-      issuedAt: {
-        $gte: new Date(year, month, 1),
-        $lt: new Date(year, month + 1, 1),
-      },
-    });
-
-    if (exists) continue;
-
-    invoices.push({
-      lease: lease._id,
-      tenant: lease.tenant._id,
-      property: lease.property._id,
-      amount: lease.monthlyRent,
+  for (const lease of activeLeases) {
+    await createInvoice({
+      leaseId: lease._id,
+      amount: lease.rentAmount,
       dueDate,
-      invoiceNumber: `INV-${uuidv4().slice(0, 8).toUpperCase()}`,
     });
   }
 
-  if (invoices.length > 0) {
-    await Invoice.insertMany(invoices);
-  }
-
-  return NextResponse.json({ created: invoices.length });
+  console.log(`✅ Generated invoices for ${activeLeases.length} active leases.`);
 }
