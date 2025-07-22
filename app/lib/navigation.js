@@ -1,16 +1,41 @@
+import {
+  IconCamera,
+  IconChartBar,
+  IconDashboard,
+  IconBuildingEstate,
+  IconUsersGroup,
+  IconCash,
+  IconDatabase,
+  IconFileAi,
+  IconFileDescription,
+  IconFileWord,
+  IconFolder,
+  IconHelp,
+  IconInnerShadowTop,
+  IconListDetails,
+  IconReport,
+  IconSearch,
+  IconSettings,
+  IconUsers,
+} from "@tabler/icons-react";
+
 export const navItems = {
-//   admin: [
-//     { name: "Dashboard", href: "/dashboard" },
-//     { name: "Properties", href: "/properties" },
-//     { name: "Tenants", href: "/tenants" },
-//     { name: "Invoices", href: "/invoices" },
-//     { name: "Settings", href: "/settings" },
-//   ],
+  //   admin: [
+  //     { name: "Dashboard", href: "/dashboard" },
+  //     { name: "Properties", href: "/properties" },
+  //     { name: "Tenants", href: "/tenants" },
+  //     { name: "Invoices", href: "/invoices" },
+  //     { name: "Settings", href: "/settings" },
+  //   ],
   landlord: [
-    { name: "Dashboard", href: "/dashboard/landlord" },
-    { name: "Properties", href: "/dashboard/properties" },
-    { name: "Tenants", href: "/dashboard/tenants" },
-    { name: "Payments", href: "/dashboard/payments" },
+    { name: "Dashboard", href: "/dashboard/landlord", icon: IconDashboard },
+    {
+      name: "Properties",
+      href: "/dashboard/properties",
+      icon: IconBuildingEstate,
+    },
+    { name: "Tenants", href: "/dashboard/tenants", icon: IconUsersGroup },
+    { name: "Payments", href: "/dashboard/payments", icon: IconCash },
   ],
   tenant: [
     { name: "Dashboard", href: "/dashboard/tenant" },
