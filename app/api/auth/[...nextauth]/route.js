@@ -2,8 +2,6 @@ import NextAuth from "next-auth";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import clientPromise from "@/app/lib/db";
 
-
-
 export const authOptions = {
   adapter: MongoDBAdapter(clientPromise),
   providers: [
@@ -40,10 +38,7 @@ export const authOptions = {
       return token;
     },
   },
-  pages: {
-    signIn: "/auth/signin",
-    error: "/auth/error",
-  },
+
   secret: process.env.NEXTAUTH_SECRET,
 };
 

@@ -16,7 +16,10 @@ export const authOptions = {
         const user = await User.findOne({ email: credentials.email });
         if (!user) return null;
 
-        const isValid = await bcrypt.compare(credentials.password, user.password);
+        const isValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
         if (!isValid) return null;
 
         return {
@@ -31,11 +34,8 @@ export const authOptions = {
   session: {
     strategy: "jwt",
   },
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
- callbacks: {
+
+  callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role;

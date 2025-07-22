@@ -1,16 +1,14 @@
 // app/dashboard/page.tsx (admin dashboard)
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
+import { requireRole } from "../lib/auth/helpers";
 
 import { getAdminDashboardData } from "../lib/actions/dashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 export default async function AdminDashboardPage() {
-  const session = await getServerSession();
-  if (!session || session.user.role !== "admin") {
-    return redirect("/dashboard/unauthorized");
-  }
+  const session = await requireRole("admin")
 
   const data = await getAdminDashboardData();
 
