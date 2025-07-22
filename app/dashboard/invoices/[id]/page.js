@@ -29,13 +29,13 @@ export default async function InvoiceDetail({ params }) {
       </ul>
       {user?.role === "admin" && (
         <form action={updatePaidAmount}>
-          <Input
+          <input
             name="paidAmount"
             type="number"
             defaultValue={invoice.paidAmount}
           />
           <input type="hidden" name="invoiceId" value={invoice._id} />
-          <Button type="submit">Update Paid Amount</Button>
+          <button type="submit">Update Paid Amount</button>
         </form>
       )}
     </div>

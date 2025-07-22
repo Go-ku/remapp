@@ -5,17 +5,19 @@ import { redirect } from "next/navigation";
 import { getAdminDashboardData } from "../lib/actions/dashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { requireRole } from "../lib/auth/helpers";
+import { authOptions } from "../lib/auth/options";
 
 export default async function AdminDashboardPage() {
-  const session = await getServerSession();
-  if (!session || session.user.role !== "admin") {
-    return redirect("/dashboard/unauthorized");
-  }
-
+  const session = await requireRole('admin')
+  // const session = await getServerSession(authOptions)
+  // if (session.user.role !== 'admin') {
+  //   redirect('unauthorized')
+  // }
   const data = await getAdminDashboardData();
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 p-8">
       <h1 className="text-2xl font-bold">Admin Dashboard</h1>
       <Separator />
 

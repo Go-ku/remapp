@@ -12,7 +12,7 @@ export const authOptions = {
         password: {},
       },
       async authorize(credentials) {
-        await dbConnect();
+        await connectDB();
         const user = await User.findOne({ email: credentials.email });
         if (!user) return null;
 
