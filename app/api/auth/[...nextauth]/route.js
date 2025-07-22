@@ -1,11 +1,14 @@
 import NextAuth from "next-auth";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import clientPromise from "@/app/lib/db";
+import Credentials from "next-auth/providers/credentials";
+import { connectDB } from "@/app/lib/db";
+import User from "@/app/lib/models/User";
 
 export const authOptions = {
   adapter: MongoDBAdapter(clientPromise),
   providers: [
-    CredentialsProvider({
+    Credentials({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
@@ -13,8 +16,9 @@ export const authOptions = {
       },
       async authorize(credentials) {
         await connectDB();
-        const user = await User.findOne({ email: credentials.email });
 
+        const user = await User.findOne({ email: credentials.email });
+        console.log("the user is: ", user);
         if (user && credentials.password === "password") {
           return user;
         }
@@ -38,7 +42,6 @@ export const authOptions = {
       return token;
     },
   },
-
   secret: process.env.NEXTAUTH_SECRET,
 };
 

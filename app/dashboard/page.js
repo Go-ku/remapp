@@ -6,14 +6,19 @@ import { requireRole } from "../lib/auth/helpers";
 import { getAdminDashboardData } from "../lib/actions/dashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { requireRole } from "../lib/auth/helpers";
+import { authOptions } from "../lib/auth/options";
 
 export default async function AdminDashboardPage() {
-  const session = await requireRole("admin")
-
+  const session = await requireRole("admin");
+  // const session = await getServerSession(authOptions)
+  // if (session.user.role !== 'admin') {
+  //   redirect('unauthorized')
+  // }
   const data = await getAdminDashboardData();
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 p-8">
       <h1 className="text-2xl font-bold">Admin Dashboard</h1>
       <Separator />
 
@@ -50,7 +55,9 @@ export default async function AdminDashboardPage() {
             <CardTitle>Revenue (This Month)</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">ZMW {data.monthlyRevenue?.toLocaleString()}</p>
+            <p className="text-3xl font-bold">
+              ZMW {data.monthlyRevenue?.toLocaleString()}
+            </p>
           </CardContent>
         </Card>
       </div>
