@@ -1,6 +1,8 @@
-import { connectDB } from "@/lib/db";
-import Payment from "@/lib/models/Payment";
-import Invoice from "@/lib/models/Invoice";
+import { connectDB } from "../db";
+import Payment from "../models/Payment";
+import Invoice from "../models/Invoice";
+import Tenant from "../models/Tenant";
+import Lease from "../models/Lease";
 import { createNotification } from "./notification";
 export async function createPayment(data) {
   await connectDB();
@@ -67,7 +69,7 @@ export async function createPayment(data) {
   }
   await createNotification({
   recipient: lease.landlord, // Make sure landlord is accessible
-  message: `Payment of ZMW ${payment.amount} received from ${tenant.name}.`,
+  message: `Payment of ZMW ${payment.amount} received from ${lease.tenant.name}.`,
   type: "payment",
   link: `/dashboard/payments/${payment._id}`,
 });
@@ -92,7 +94,11 @@ export async function getPaymentById(id) {
 export async function getAllPayments() {
   await connectDB();
   return await Payment.find()
-    .populate("lease tenant invoice")
+    .populate([
+      { path: "lease", select: "property" },
+      { path: "tenant", select: "name" },
+      { path: "invoice", select: "invoiceNumber" }
+    ])
     .sort({ paidAt: -1 });
 }
 export async function getPaymentsForInvoice(invoiceId) {

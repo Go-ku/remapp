@@ -32,7 +32,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-
+import { navItems } from "@/app/lib/navigation";
 const data = {
   user: {
     name: "shadcn",

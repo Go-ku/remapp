@@ -1,5 +1,5 @@
-import { connectDB } from "@/lib/mongoose/db";
-import Tenant from "@/lib/mongoose/models/Tenant";
+import { connectDB } from "../db";
+import Tenant from "../models/Tenant";
 
 export async function getAllTenants() {
   await connectDB();

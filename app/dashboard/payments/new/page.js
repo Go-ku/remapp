@@ -1,19 +1,19 @@
-import { getAllLeases } from "@/lib/mongoose/actions/leaseActions";
-import { getAllTenants } from "@/lib/mongoose/actions/tenantActions";
-import { createPayment } from "@/lib/mongoose/actions/paymentActions";
+import { getAllLeases } from "@/app/lib/actions/lease";
+import { getAllTenants } from "@/app/lib/actions/tenant";
+import { createPayment } from "@/app/lib/actions/payment";
 import { getServerSession } from "next-auth";
-import { PaymentForm } from "@/components/forms/PaymentForm";
+import { PaymentForm } from "@/app/components/forms/PaymentForm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 
 export default async function NewPaymentPage({ searchParams }) {
-  const leases = await getAllLeases();
-  const tenants = await getAllTenants();
-  const session = await getServerSession();
+  const leases = JSON.parse(JSON.stringify(await getAllLeases()))
+  const tenants = JSON.parse(JSON.stringify(await getAllTenants()))
+  const session = await getServerSession()
 
-  const leaseId = searchParams?.leaseId || "";
-  const amount = searchParams?.amount || "";
+  const leaseId = (await searchParams)?.leaseId || "";
+  const amount = (await searchParams)?.amount || "";
 
   const userRole = session?.user?.role;
   const tenantId = session?.user?.id;

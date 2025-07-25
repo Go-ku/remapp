@@ -1,6 +1,6 @@
 // lib/services/notify.js
-import Notification from "@/models/Notification";
-import { connectDB } from "@/lib/db";
+import Notification from "../models/Notification";
+import { connectDB } from "../db";
 
 export async function createNotification({ recipient, message, type, link = "" }) {
   await connectDB();

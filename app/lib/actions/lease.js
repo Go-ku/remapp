@@ -1,6 +1,7 @@
-import { connectDB } from "@/lib/mongoose/db";
-import Lease from "@/lib/mongoose/models/Lease";
+import { connectDB } from "../db";
+import Lease from "../models/Lease";
 import { createNotification } from "./notification";
+import Property from "../models/Property";
 
 export async function createLease(data) {
   await connectDB();

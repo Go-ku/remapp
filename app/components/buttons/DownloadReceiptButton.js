@@ -2,7 +2,7 @@
 
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { Button } from "@/components/ui/button";
-import { ReceiptPDF } from "@/components/pdf/ReceiptPDF";
+import { ReceiptPDF } from "../pdf/ReceiptPDF";
 
 export function DownloadReceiptButton({ invoice }) {
   return (

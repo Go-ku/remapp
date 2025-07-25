@@ -20,13 +20,13 @@ import {
 } from "@tabler/icons-react";
 
 export const navItems = {
-  //   admin: [
-  //     { name: "Dashboard", href: "/dashboard" },
-  //     { name: "Properties", href: "/properties" },
-  //     { name: "Tenants", href: "/tenants" },
-  //     { name: "Invoices", href: "/invoices" },
-  //     { name: "Settings", href: "/settings" },
-  //   ],
+    admin: [
+      { name: "Dashboard", href: "/dashboard" },
+      { name: "Properties", href: "/properties" },
+      { name: "Tenants", href: "/tenants" },
+      { name: "Invoices", href: "/invoices" },
+      { name: "Settings", href: "/settings" },
+    ],
   landlord: [
     { name: "Dashboard", href: "/dashboard/landlord", icon: IconDashboard },
     {

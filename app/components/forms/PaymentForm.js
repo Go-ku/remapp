@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { paymentSchema } from "@/lib/validations/paymentSchema";
+import { paymentSchema } from "@/app/lib/validators/paymentSchema";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,18 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useTransition } from "react";
+
+const PAYMENT_TYPES = [
+  { value: "rent", label: "Rent" },
+  { value: "deposit", label: "Deposit" },
+  { value: "maintenance", label: "Maintenance" },
+];
+
+const PAYMENT_METHODS = [
+  { value: "momo", label: "MTN MoMo" },
+  { value: "cash", label: "Cash" },
+  { value: "bank_transfer", label: "Bank Transfer" },
+];
 
 export function PaymentForm({
   leases,
@@ -48,20 +60,18 @@ export function PaymentForm({
     });
   };
 
-  const filteredLeases =
-    userRole === "tenant"
-      ? leases.filter((l) => l.tenant?._id === tenantId)
-      : leases;
+  const filteredLeases = userRole === "tenant"
+    ? leases.filter((l) => l.tenant?._id === tenantId)
+    : leases;
 
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-4">
-      {/* Tenant Select */}
+      {/* Tenant Select (only for non-tenants) */}
       {userRole !== "tenant" && (
-        <>
+        <div className="space-y-2">
           <Select
             onValueChange={(val) => setValue("tenant", val)}
             defaultValue=""
-            disabled={userRole !== "tenant"}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select Tenant" />
@@ -77,72 +87,90 @@ export function PaymentForm({
           {errors.tenant && (
             <p className="text-sm text-red-500">{errors.tenant.message}</p>
           )}
-        </>
+        </div>
       )}
 
       {/* Lease Select */}
-      <Select
-        onValueChange={(val) => setValue("lease", val)}
-        defaultValue={initialLease}
+      <div className="space-y-2">
+        <Select
+          onValueChange={(val) => setValue("lease", val)}
+          defaultValue={initialLease}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select Lease" />
+          </SelectTrigger>
+          <SelectContent>
+            {filteredLeases.map((l) => (
+              <SelectItem key={l._id} value={l._id}>
+                {l.property?.name} – {l.tenant?.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {errors.lease && (
+          <p className="text-sm text-red-500">{errors.lease.message}</p>
+        )}
+      </div>
+
+      {/* Amount Input */}
+      <div className="space-y-2">
+        <Input
+          {...register("amount")}
+          placeholder="Payment Amount"
+          type="number"
+          className={errors.amount ? "border-red-500" : ""}
+        />
+        {errors.amount && (
+          <p className="text-sm text-red-500">{errors.amount.message}</p>
+        )}
+      </div>
+
+      {/* Payment Type */}
+      <div className="space-y-2">
+        <Select
+          onValueChange={(val) => setValue("type", val)}
+          defaultValue="rent"
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Payment Type" />
+          </SelectTrigger>
+          <SelectContent>
+            {PAYMENT_TYPES.map((type) => (
+              <SelectItem key={type.value} value={type.value}>
+                {type.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Payment Method */}
+      <div className="space-y-2">
+        <Select
+          onValueChange={(val) => setValue("method", val)}
+          defaultValue="momo"
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Payment Method" />
+          </SelectTrigger>
+          <SelectContent>
+            {PAYMENT_METHODS.map((method) => (
+              <SelectItem key={method.value} value={method.value}>
+                {method.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Submit Button */}
+      <Button 
+        type="submit" 
+        disabled={isPending} 
+        className="w-full mt-6"
+        aria-disabled={isPending}
       >
-        <SelectTrigger>
-          <SelectValue placeholder="Select Lease" />
-        </SelectTrigger>
-        <SelectContent>
-          {filteredLeases.map((l) => (
-            <SelectItem key={l._id} value={l._id}>
-              {l.property?.name} – {l.tenant?.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {errors.lease && (
-        <p className="text-sm text-red-500">{errors.lease.message}</p>
-      )}
-
-      {/* Amount */}
-      <Input
-        {...register("amount")}
-        placeholder="Payment Amount"
-        type="number"
-      />
-      {errors.amount && (
-        <p className="text-sm text-red-500">{errors.amount.message}</p>
-      )}
-
-      {/* Type */}
-      <Select
-        onValueChange={(val) => setValue("type", val)}
-        defaultValue="rent"
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Payment Type" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="rent">Rent</SelectItem>
-          <SelectItem value="deposit">Deposit</SelectItem>
-          <SelectItem value="maintenance">Maintenance</SelectItem>
-        </SelectContent>
-      </Select>
-
-      {/* Method */}
-      <Select
-        onValueChange={(val) => setValue("method", val)}
-        defaultValue="momo"
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Payment Method" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="momo">MTN MoMo</SelectItem>
-          <SelectItem value="cash">Cash</SelectItem>
-          <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-        </SelectContent>
-      </Select>
-
-      {/* Submit */}
-      <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Saving..." : "Submit Payment"}
+        {isPending ? "Processing..." : "Submit Payment"}
       </Button>
     </form>
   );
